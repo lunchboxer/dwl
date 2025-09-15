@@ -133,6 +133,7 @@ static const char *brightupcmd[] = { "brightnessctl", "set", "1%+", NULL };
 static const char *brightmincmd[] = { "brightnessctl", "set", "1%", NULL };
 static const char *brightmaxcmd[] = { "brightnessctl", "set", "100%", NULL };
 static const char *logoutcmd[] = { "logouthelper", NULL };
+static const char *unmountcmd[] = { "unmounter", NULL };
 
 static const Key keys[] = {
 	/* Note that Shift changes certain key codes: c -> C, 2 -> at, etc. */
@@ -140,6 +141,7 @@ static const Key keys[] = {
 	{ MODKEY,                    XKB_KEY_r,          spawn,          {.v = menucmd} },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Return,     spawn,          {.v = termcmd} },
     { MODKEY,                    XKB_KEY_p,          spawn,          {.v = passcmd} },
+    { MODKEY,                    XKB_KEY_u,          spawn,          {.v = unmountcmd} },
 	{ MODKEY,                    XKB_KEY_j,          focusstack,     {.i = +1} },
 	{ MODKEY,                    XKB_KEY_k,          focusstack,     {.i = -1} },
 	{ MODKEY,                    XKB_KEY_i,          incnmaster,     {.i = +1} },
@@ -148,7 +150,7 @@ static const Key keys[] = {
 	{ MODKEY,                    XKB_KEY_l,          setmfact,       {.f = +0.05f} },
 	{ MODKEY,                    XKB_KEY_Return,     zoom,           {0} },
 	{ MODKEY,                    XKB_KEY_Tab,        view,           {0} },
-	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          killclient,     {0} },
+	{ MODKEY,                    XKB_KEY_q,          killclient,     {0} },
 	{ MODKEY,                    XKB_KEY_t,          setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                    XKB_KEY_f,          setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                    XKB_KEY_m,          setlayout,      {.v = &layouts[2]} },
