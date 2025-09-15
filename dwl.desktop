@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=dwl
+Comment=dwm for Wayland
+Exec=start-dwl
+Type=Application
+DesktopNames=wlroots
+X-KDE-Wayland-Interfaces=wl_compositor,wl_shm

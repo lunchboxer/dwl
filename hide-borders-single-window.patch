@@ -1,0 +1,57 @@
+From 1b0a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a Mon Sep 17 00:00:00 2001
+From: Crush <crush@charm.land>
+Date: Sun, 14 Sep 2025 12:00:00 +0000
+Subject: [PATCH] Hide borders when only one tiled window is visible
+
+This patch modifies the tile() function to hide borders when only one
+tiled window is visible on a monitor, and restores the original border
+width when more than one tiled window is visible.
+
+The change is implemented by:
+1. Counting visible tiled windows in the tile() function
+2. Setting border width to 0 for all windows when count is 1
+3. Restoring original border width when count is greater than 1
+---
+ dwl.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/dwl.c b/dwl.c
+index 1111111..2222222 100644
+--- a/dwl.c
++++ b/dwl.c
+@@ -2712,11 +2712,31 @@ tile(Monitor *m)
+ {
+ 	unsigned int mw, my, ty;
+ 	int i, n = 0;
+ 	Client *c;
+ 
+ 	wl_list_for_each(c, &clients, link)
+ 		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen)
+ 			n++;
++
++	/* Set border width based on number of visible tiled windows */
++	wl_list_for_each(c, &clients, link) {
++		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen)
++			continue;
++		if (n <= 1) {
++			c->bw = 0;
++		} else {
++			c->bw = borderpx;
++		}
++		/* Update border sizes */
++		wlr_scene_rect_set_size(c->border[0], c->geom.width, c->bw);
++		wlr_scene_rect_set_size(c->border[1], c->geom.width, c->bw);
++		wlr_scene_rect_set_size(c->border[2], c->bw, c->geom.height - 2 * c->bw);
++		wlr_scene_rect_set_size(c->border[3], c->bw, c->geom.height - 2 * c->bw);
++		wlr_scene_node_set_position(&c->border[1]->node, 0, c->geom.height - c->bw);
++		wlr_scene_node_set_position(&c->border[2]->node, 0, c->bw);
++		wlr_scene_node_set_position(&c->border[3]->node, c->geom.width - c->bw, c->bw);
++	}
++
+ 	if (n == 0)
+ 		return;
+ 
+ 	if (n > m->nmaster)
+ 		mw = m->nmaster ? (int)roundf(m->w.width * m->mfact) : 0;
+-- 
+2.34.1
