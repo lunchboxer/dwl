@@ -32,7 +32,7 @@ jobs:
             ninja \
             pkgconf \
             wayland \
-            wlroots \
+            wlroots-0.19 \
             libinput \
             libxkbcommon \
             wayland-protocols
