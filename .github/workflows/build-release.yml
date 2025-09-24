@@ -17,43 +17,55 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          pkg-config \
-          libwayland-dev \
-          libwlroots-0.19-dev \
-          libxkbcommon-dev \
-          libinput-dev \
-          wayland-protocols \
-          git \
-          meson \
-          ninja-build
-    
-    - name: Build dwl
-      run: |
-        make
+    - name: Set up Arch Linux container
+      uses: addnab/docker-run-action@v3
+      with:
+        image: archlinux:base-devel
+        options: -v ${{ github.workspace }}:/workspace
+        run: |
+          # Update system and install dependencies
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            base-devel \
+            git \
+            meson \
+            ninja \
+            pkgconf \
+            wayland \
+            wlroots \
+            libinput \
+            libxkbcommon \
+            wayland-protocols
+          
+          # Navigate to workspace
+          cd /workspace
+          
+          # Build dwl
+          make
+          
+          # Strip binary
+          strip dwl
+          
+          # Create release directory
+          mkdir -p release/dwl-${{ matrix.arch }}
+          cp dwl release/dwl-${{ matrix.arch }}/
+          cp README.md release/dwl-${{ matrix.arch }}/
+          cp LICENSE release/dwl-${{ matrix.arch }}/
+          cp config.def.h release/dwl-${{ matrix.arch }}/
+          
+          # Create archive
+          cd release
+          tar -czf dwl-${{ matrix.arch }}.tar.gz dwl-${{ matrix.arch }}
         
-    - name: Strip binary
+    - name: Move release artifact
       run: |
-        strip dwl
-        
-    - name: Create release archive
-      run: |
-        mkdir -p release/dwl-${{ matrix.arch }}
-        cp dwl release/dwl-${{ matrix.arch }}/
-        cp README.md release/dwl-${{ matrix.arch }}/
-        cp LICENSE release/dwl-${{ matrix.arch }}/
-        cd release
-        tar -czf dwl-${{ matrix.arch }}.tar.gz dwl-${{ matrix.arch }}
+        docker cp $(docker ps -aq -n 1):/workspace/release/dwl-${{ matrix.arch }}.tar.gz .
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: dwl-${{ matrix.arch }}
-        path: release/dwl-${{ matrix.arch }}.tar.gz
+        path: dwl-${{ matrix.arch }}.tar.gz
         
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -106,6 +118,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release/dwl-${{ matrix.arch }}.tar.gz
+        asset_path: dwl-${{ matrix.arch }}.tar.gz
         asset_name: dwl-${{ matrix.arch }}.tar.gz
         asset_content_type: application/gzip
